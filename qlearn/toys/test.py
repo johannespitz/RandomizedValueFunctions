@@ -12,7 +12,7 @@ from torch.autograd import Variable
 
 
 # Test DQN
-def test(args, env, dqn):
+def test(args, env, dqn, render=False):
     rewards = []
 
     # Test performance over several episodes
@@ -23,6 +23,9 @@ def test(args, env, dqn):
         while True:
             if done:
                 state, reward_sum, done = env.reset(), 0, False
+            if render:
+                env.render()
+                print(reward_sum, done)
             if args.agent == 'VariationalDQN':
                 action = dqn.act(state[None], sample=False)
             elif args.agent in ['NoisyDQN', 'BayesBackpropDQN', 'MNFDQN']:
@@ -36,6 +39,10 @@ def test(args, env, dqn):
             reward_sum += reward
 
             if done:
+                if render:
+                    env.render()
+                    print(reward_sum, done)
+                    render = False
                 rewards.append(reward_sum)
                 break
     env.close()

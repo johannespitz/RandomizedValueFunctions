@@ -25,6 +25,7 @@ from qlearn.toys.bayes_backprop_agent import BayesBackpropAgent
 from qlearn.toys.noisy_agent import NoisyAgent
 from qlearn.toys.mnf_agent import MNFAgent
 from qlearn.envs.nchain import NChainEnv
+from qlearn.envs.circle import Circle
 # from qlearn.toys.memory import ReplayBuffer
 from qlearn.toys.test import test
 
@@ -45,7 +46,7 @@ parser.add_argument('--lr', type=float, default=0.001, metavar='ETA', help='Lear
 parser.add_argument('--adam-eps', type=float, default=1.5e-4, metavar='EPSILON', help='Adam epsilon')
 parser.add_argument('--batch-size', type=int, default=32, metavar='SIZE', help='Batch size')
 parser.add_argument('--input-dim', type=int, default=8, help='the length of chain environment')
-parser.add_argument('--evaluation-interval', type=int, default=10, metavar='STEPS', help='Number of training steps between evaluations')
+parser.add_argument('--evaluation-interval', type=int, default=1, metavar='STEPS', help='Number of training steps between evaluations')
 parser.add_argument('--nheads', type=int, default=10, help='number of heads in Bootstrapped DQN')
 parser.add_argument('--agent', type=str, default='DQN', help='type of agent')
 parser.add_argument('--final-exploration', type=float, default=0.1, help='last value of epsilon')
@@ -57,6 +58,8 @@ parser.add_argument('--n-flows-q', type=int, default=int(1), help='number of nor
 parser.add_argument('--n-flows-r', type=int, default=int(1), help='number of normalizing flows using for auxiliary posterior r')
 parser.add_argument('--logdir', type=str, default='logs', help='log directory')
 parser.add_argument('--double-q', type=int, default=1, help='whether or not to use Double DQN')
+
+parser.add_argument('--env-name', type=str, default='nchain', help='Select env by name (nchain, circle)')
 
 # Setup
 args = parser.parse_args()
@@ -73,7 +76,11 @@ if args.cuda:
     torch.cuda.manual_seed(args.seed)
 
 # Environment
-env = NChainEnv(args.input_dim)
+if args.env_name == 'nchain':
+    env = NChainEnv(args.input_dim)
+else:
+    env = Circle(radius=args.input_dim)
+    args.input_dim = env.observation_space.n
 action_space = env.action_space.n
 
 # Log
@@ -151,6 +158,6 @@ for episode in range(args.max_episodes):
     #         visited.append(transition.state.sum())
     #     print(Counter(visited))
 
-    if episode > 4:
-        avg_reward = test(args, env, dqn)  # Test
+    if episode % args.evaluation_interval == 0:
+        avg_reward = test(args, env, dqn)#, render=(episode % (args.evaluation_interval * 10) == 0))  # Test
         print('episode: ' + str(episode) + ', Avg. reward: ' + str(round(avg_reward, 4)))

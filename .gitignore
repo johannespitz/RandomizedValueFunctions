@@ -6,3 +6,8 @@
 #
 __pycache__
 .idea
+
+logs/
+log_dir/
+save_dir/
+qlearn.egg-info/
