@@ -47,3 +47,6 @@ class NChainEnv(gym.Env):
         self.state = 1
         self.nsteps = 0
         return (v <= self.state).astype('float32')
+
+    def render(self, mode='human'):
+        print('-' * self.state + 'X' + '-' * (self.observation_space.n - self.state - 1))
