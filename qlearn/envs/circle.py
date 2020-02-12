@@ -26,7 +26,7 @@ class Circle(gym.Env):
         else:
             self.observation_space = spaces.Box(low=np.array([-self.edge, -self.edge]),
                                                 high=np.array([self.edge, self.edge]), dtype=np.int32)
-        self.max_nsteps = 4 * 2 * radius + 8
+        self.max_nsteps = 4 * 2 * self.radius + 8
         self.startpos = np.array([0, self.radius])
 
         self.state = None
@@ -77,28 +77,38 @@ class Circle(gym.Env):
         assert self.action_space.contains(action)
         self.prev_state = self.state
 
-        if action == 0:
-            self.state = self.state + np.array([0, -1])
-        elif action == 1:
-            self.state = self.state + np.array([0,  1])
-        elif action == 2:
-            self.state = self.state + np.array([-1, 0])
-        elif action == 3:
-            self.state = self.state + np.array([ 1, 0])
 
         if np.all(self.state == np.array([-1, self.radius])):
             reward = 1 * self.multiply_reward
-            is_done = True
-        elif self._vaild_cell(self.state[0], self.state[1]):
-            if np.linalg.norm(self.furthest_point - np.array([0, self.radius])) < np.linalg.norm(self.state - np.array([0, self.radius])):
-                self.furthest_point = self.state
-                reward = 0.001
-            else:
-                reward = 0.0
             is_done = self.nsteps >= self.max_nsteps
         else:
-            reward = 0.0 # TODO: try 0
-            is_done = True
+
+            if action == 0:
+                self.state = self.state + np.array([0, -1])
+            elif action == 1:
+                self.state = self.state + np.array([0,  1])
+            elif action == 2:
+                self.state = self.state + np.array([-1, 0])
+            elif action == 3:
+                self.state = self.state + np.array([ 1, 0])
+
+            if np.all(self.state == np.array([-1, self.radius])):
+                reward = 1 * self.multiply_reward
+                if self.multiply_reward == 1.0:
+                    is_done = self.nsteps >= self.max_nsteps
+                else:
+                    is_done = True
+            elif self._vaild_cell(self.state[0], self.state[1]):
+                # if np.linalg.norm(self.furthest_point - np.array([0, self.radius])) < np.linalg.norm(self.state - np.array([0, self.radius])):
+                #     self.furthest_point = self.state
+                #     reward = 0.001
+                # else:
+                #     reward = 0.0
+                reward = 0.0
+                is_done = self.nsteps >= self.max_nsteps
+            else:
+                reward = 0.0 # TODO: try 0
+                is_done = True
 
         observation = self._expand_observation() if self.expand_observation else self.state
 
